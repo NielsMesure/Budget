@@ -14,15 +14,47 @@ export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
+    const form = e.currentTarget
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value
 
-    // Simulate authentication
-    setTimeout(() => {
-      setIsLoading(false)
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    })
+
+    setIsLoading(false)
+    if (res.ok) {
       router.push("/dashboard")
-    }, 1000)
+    } else {
+      alert("Identifiants invalides")
+    }
+  }
+
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+    const form = e.currentTarget
+    const name = (form.elements.namedItem("name") as HTMLInputElement).value
+    const email = (form.elements.namedItem("email-register") as HTMLInputElement).value
+    const password = (form.elements.namedItem("password-register") as HTMLInputElement).value
+
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    })
+
+    setIsLoading(false)
+    if (res.ok) {
+      router.push("/dashboard")
+    } else {
+      alert("Erreur lors de l'inscription")
+    }
   }
 
   return (
@@ -43,7 +75,7 @@ export function AuthForm() {
           </TabsList>
 
           <TabsContent value="login" className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">
                   Email
@@ -69,7 +101,7 @@ export function AuthForm() {
           </TabsContent>
 
           <TabsContent value="register" className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-white">
                   Nom complet
