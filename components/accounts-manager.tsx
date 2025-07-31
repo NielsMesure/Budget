@@ -11,8 +11,7 @@ import { Plus, CreditCard, Wallet } from "lucide-react"
 import { useFinancialData } from "@/hooks/use-financial-data"
 
 export function AccountsManager() {
-  const { data, updateSalary, addAccount, totalAccountBalance, totalBalance } = useFinancialData()
-  const [tempSalary, setTempSalary] = useState(data.salary.toString())
+  const [tempSalary, setTempSalary] = useState("")
   const [showSalaryForm, setShowSalaryForm] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newAccount, setNewAccount] = useState({
@@ -22,6 +21,26 @@ export function AccountsManager() {
     bank: "",
     color: "bg-blue-500",
   })
+  const { data, updateSalary, addAccount, totalAccountBalance, totalBalance, totalExpenses, isLoaded } =
+      useFinancialData()
+
+  // Afficher un skeleton pendant le chargement
+  if (!isLoaded) {
+    return (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="h-8 w-32 bg-slate-600 rounded animate-pulse" />
+            <div className="h-10 w-40 bg-slate-600 rounded animate-pulse" />
+          </div>
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="h-6 w-24 bg-slate-600 rounded animate-pulse mb-4" />
+              <div className="h-12 w-48 bg-slate-600 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+        </div>
+    )
+  }
 
   const getAccountTypeLabel = (type: string) => {
     const types = {
@@ -53,10 +72,10 @@ export function AccountsManager() {
                 <div className="text-3xl font-bold text-white">
                   {totalBalance.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
                 </div>
-                <p className="text-slate-400 mt-2">Salaire + Comptes ({data.accounts.length} comptes)</p>
+                <p className="text-slate-400 mt-2">Solde net après dépenses</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-700">
                 <div>
                   <div className="text-lg font-semibold text-green-400">
                     {data.salary.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
@@ -68,6 +87,12 @@ export function AccountsManager() {
                     {totalAccountBalance.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
                   </div>
                   <p className="text-slate-400 text-sm">Comptes</p>
+                </div>
+                <div>
+                  <div className="text-lg font-semibold text-red-400">
+                    -{totalExpenses.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                  </div>
+                  <p className="text-slate-400 text-sm">Dépenses</p>
                 </div>
               </div>
             </div>
