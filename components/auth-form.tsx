@@ -29,6 +29,10 @@ export function AuthForm() {
 
     setIsLoading(false)
     if (res.ok) {
+      const data = await res.json()
+      if (data.id) {
+        localStorage.setItem("userId", data.id.toString())
+      }
       router.push("/dashboard")
     } else {
       alert("Identifiants invalides")
@@ -51,6 +55,10 @@ export function AuthForm() {
 
     setIsLoading(false)
     if (res.ok) {
+      const data = await res.json()
+      if (data.id) {
+        localStorage.setItem("userId", data.id.toString())
+      }
       router.push("/dashboard")
     } else {
       alert("Erreur lors de l'inscription")

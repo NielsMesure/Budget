@@ -1,22 +1,56 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Plus } from "lucide-react"
-import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { useState } from "react";
+import { useFinancialData } from "@/hooks/use-financial-data";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon, Plus } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export function TransactionForm() {
-  const [date, setDate] = useState<Date>()
-  const [isRecurring, setIsRecurring] = useState(false)
+  const { addTransaction } = useFinancialData();
+  const [amount, setAmount] = useState(0);
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState<Date>();
+  const [isRecurring, setIsRecurring] = useState(false);
+
+  const handleAdd = () => {
+    if (!date || !amount || !category) return;
+    addTransaction({
+      amount,
+      description,
+      category,
+      date: date.toISOString().slice(0, 10),
+      isRecurring,
+      notes,
+    });
+    setAmount(0);
+    setCategory("");
+    setDescription("");
+    setNotes("");
+    setDate(undefined);
+    setIsRecurring(false);
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -37,6 +71,8 @@ export function TransactionForm() {
                 id="amount"
                 type="number"
                 step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                 placeholder="0.00"
                 className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
               />
@@ -46,7 +82,7 @@ export function TransactionForm() {
               <Label htmlFor="category" className="text-white">
                 Catégorie
               </Label>
-              <Select>
+              <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                   <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
@@ -70,6 +106,8 @@ export function TransactionForm() {
             </Label>
             <Input
               id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Description de la transaction"
               className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
             />
@@ -84,17 +122,29 @@ export function TransactionForm() {
                   className="w-full justify-start text-left font-normal bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP", { locale: fr }) : "Sélectionner une date"}
+                  {date
+                    ? format(date, "PPP", { locale: fr })
+                    : "Sélectionner une date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 bg-slate-700 border-slate-600">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus className="text-white" />
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                  className="text-white"
+                />
               </PopoverContent>
             </Popover>
           </div>
 
           <div className="flex items-center space-x-2">
-            <Switch id="recurring" checked={isRecurring} onCheckedChange={setIsRecurring} />
+            <Switch
+              id="recurring"
+              checked={isRecurring}
+              onCheckedChange={setIsRecurring}
+            />
             <Label htmlFor="recurring" className="text-white">
               Transaction récurrente
             </Label>
@@ -140,6 +190,8 @@ export function TransactionForm() {
             </Label>
             <Textarea
               id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
               placeholder="Notes supplémentaires..."
               className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
               rows={3}
@@ -147,13 +199,21 @@ export function TransactionForm() {
           </div>
 
           <div className="flex gap-4">
-            <Button className="flex-1 bg-purple-600 hover:bg-purple-700">Ajouter la transaction</Button>
-            <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent">
+            <Button
+              onClick={handleAdd}
+              className="flex-1 bg-purple-600 hover:bg-purple-700"
+            >
+              Ajouter la transaction
+            </Button>
+            <Button
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
+            >
               Annuler
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

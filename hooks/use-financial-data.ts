@@ -49,35 +49,83 @@ export function useFinancialData() {
         transactions: [],
     })
     const [isLoaded, setIsLoaded] = useState(false)
+    const [userId, setUserId] = useState<string | null>(null)
 
-    // Charger les données depuis localStorage au démarrage
+    // Charger les données depuis localStorage et l'API au démarrage
     useEffect(() => {
-        const savedData = localStorage.getItem("financial-data")
+        const uid = localStorage.getItem("userId")
+        setUserId(uid)
+        const storageKey = uid ? `financial-data-${uid}` : "financial-data"
+
+        const savedData = localStorage.getItem(storageKey)
         if (savedData) {
             try {
                 const parsedData = JSON.parse(savedData)
                 setData({
-                    accounts: parsedData.accounts || [],
-                    salary: parsedData.salary || 0,
-                    recurringTransactions: parsedData.recurringTransactions || [],
-                    transactions: parsedData.transactions || [],
+                    accounts: (parsedData.accounts || []).map((acc: any) => ({
+                        ...acc,
+                        balance: Number(acc.balance) || 0,
+                    })),
+                    salary: Number(parsedData.salary) || 0,
+                    recurringTransactions: (parsedData.recurringTransactions || []).map((t: any) => ({
+                        ...t,
+                        amount: Number(t.amount) || 0,
+                    })),
+                    transactions: (parsedData.transactions || []).map((t: any) => ({
+                        ...t,
+                        amount: Number(t.amount) || 0,
+                    })),
                 })
             } catch (error) {
                 console.error("Error parsing saved data:", error)
             }
         }
-        setIsLoaded(true)
+
+        async function fetchRemote() {
+            if (!uid) {
+                setIsLoaded(true)
+                return
+            }
+            try {
+                const resSalary = await fetch(`/api/salary?userId=${uid}`)
+                if (resSalary.ok) {
+                    const js = await resSalary.json()
+                    setData((prev) => ({ ...prev, salary: Number(js.salary) || 0 }))
+                }
+                const resTx = await fetch(`/api/transactions?userId=${uid}`)
+                if (resTx.ok) {
+                    const txs = await resTx.json()
+                    const parsed = txs.map((t: any) => ({
+                        ...t,
+                        amount: Number(t.amount) || 0,
+                    }))
+                    setData((prev) => ({ ...prev, transactions: parsed }))
+                }
+            } catch (e) {
+                console.error(e)
+            }
+            setIsLoaded(true)
+        }
+        fetchRemote()
     }, [])
 
     // Sauvegarder les données dans localStorage à chaque changement
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem("financial-data", JSON.stringify(data))
+            const key = userId ? `financial-data-${userId}` : "financial-data"
+            localStorage.setItem(key, JSON.stringify(data))
         }
-    }, [data, isLoaded])
+    }, [data, isLoaded, userId])
 
     const updateSalary = (salary: number) => {
         setData((prev) => ({ ...prev, salary }))
+        if (userId) {
+            fetch('/api/salary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, salary })
+            }).catch(console.error)
+        }
     }
 
     const addAccount = (account: Omit<Account, "id">) => {
@@ -107,22 +155,33 @@ export function useFinancialData() {
     const addTransaction = (transaction: Omit<Transaction, "id">) => {
         const newTransaction = {
             ...transaction,
+            amount: Number(transaction.amount) || 0,
             id: Date.now(),
         }
         setData((prev) => ({
             ...prev,
             transactions: [...(prev.transactions || []), newTransaction],
         }))
+        if (userId) {
+            fetch('/api/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, ...newTransaction })
+            }).catch(console.error)
+        }
     }
 
     // Calculs dérivés avec vérifications de sécurité
-    const totalAccountBalance = (data.accounts || []).reduce((sum, account) => sum + (account.balance || 0), 0)
+    const totalAccountBalance = (data.accounts || []).reduce(
+        (sum, account) => sum + (Number(account.balance) || 0),
+        0,
+    )
     const totalRecurringExpenses = (data.recurringTransactions || []).reduce(
-        (sum, transaction) => sum + (transaction.amount || 0),
+        (sum, transaction) => sum + (Number(transaction.amount) || 0),
         0,
     )
     const totalTransactionExpenses = (data.transactions || []).reduce(
-        (sum, transaction) => sum + (transaction.amount || 0),
+        (sum, transaction) => sum + (Number(transaction.amount) || 0),
         0,
     )
     const totalExpenses = totalRecurringExpenses + totalTransactionExpenses
