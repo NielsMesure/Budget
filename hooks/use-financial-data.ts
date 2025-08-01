@@ -98,8 +98,26 @@ export function useFinancialData() {
                     const parsed = txs.map((t: any) => ({
                         ...t,
                         amount: Number(t.amount) || 0,
+                        isRecurring: !!t.is_recurring,
                     }))
-                    setData((prev) => ({ ...prev, transactions: parsed }))
+                    const recurring = parsed
+                        .filter((t) => t.isRecurring)
+                        .map((t) => ({
+                            id: t.id,
+                            name: t.description,
+                            amount: t.amount,
+                            nextDate: t.date,
+                            category: t.category,
+                            logo: "",
+                            color: "bg-blue-500",
+                            frequency: "monthly" as const,
+                            dayOfMonth: new Date(t.date).getDate(),
+                        }))
+                    setData((prev) => ({
+                        ...prev,
+                        transactions: parsed,
+                        recurringTransactions: recurring,
+                    }))
                 }
             } catch (e) {
                 console.error(e)
@@ -181,7 +199,8 @@ export function useFinancialData() {
         0,
     )
     const totalTransactionExpenses = (data.transactions || []).reduce(
-        (sum, transaction) => sum + (Number(transaction.amount) || 0),
+        (sum, transaction) =>
+            sum + (!transaction.isRecurring ? Number(transaction.amount) || 0 : 0),
         0,
     )
     const totalExpenses = totalRecurringExpenses + totalTransactionExpenses
