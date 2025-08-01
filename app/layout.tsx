@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
+import { FinancialDataProvider } from '@/hooks/use-financial-data'
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -25,7 +26,11 @@ html {
 }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        <FinancialDataProvider>
+          {children}
+        </FinancialDataProvider>
+      </body>
     </html>
   )
 }

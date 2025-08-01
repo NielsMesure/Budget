@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, createContext, useContext, ReactNode } from "react"
 
 interface Account {
     id: number
@@ -41,7 +41,7 @@ interface FinancialData {
     transactions: Transaction[]
 }
 
-export function useFinancialData() {
+function useFinancialDataState() {
     const [data, setData] = useState<FinancialData>({
         accounts: [],
         salary: 0,
@@ -300,4 +300,22 @@ export function useFinancialData() {
         totalTransactionExpenses,
         totalBalance,
     }
+}
+
+type FinancialDataContextValue = ReturnType<typeof useFinancialDataState>
+const FinancialDataContext = createContext<FinancialDataContextValue | undefined>(undefined)
+
+export function FinancialDataProvider({ children }: { children: ReactNode }) {
+    const value = useFinancialDataState()
+    return (
+        <FinancialDataContext.Provider value={value}>{children}</FinancialDataContext.Provider>
+    )
+}
+
+export function useFinancialData() {
+    const ctx = useContext(FinancialDataContext)
+    if (!ctx) {
+        throw new Error("useFinancialData must be used within FinancialDataProvider")
+    }
+    return ctx
 }

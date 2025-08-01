@@ -7,7 +7,7 @@
 /.next/
 /out/
 /.idea/
-
+/.idea/workspace.xml
 # production
 /build
 
