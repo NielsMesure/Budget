@@ -14,7 +14,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useFinancialData } from "@/hooks/use-financial-data";
+
+type RecurringTransaction = {
+  id: number;
+  name: string;
+  amount: number;
+  nextDate: string;
+  category: string;
+  logo: string;
+  color: string;
+  frequency: "weekly" | "monthly" | "quarterly" | "yearly";
+  dayOfMonth: number;
+};
 
 export function RecurringTransactions() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -27,10 +45,24 @@ export function RecurringTransactions() {
     color: "bg-blue-500",
     frequency: "monthly" as const,
   });
+  const [editingTransaction, setEditingTransaction] = useState<
+    RecurringTransaction | null
+  >(null);
+  const [editValues, setEditValues] = useState({
+    name: "",
+    amount: 0,
+    nextDate: "",
+    category: "",
+    logo: "",
+    color: "bg-blue-500",
+    frequency: "monthly" as const,
+  });
   const {
     data,
     addRecurringTransaction,
     addTransaction,
+    updateRecurringTransaction,
+    removeRecurringTransaction,
     totalRecurringExpenses,
     isLoaded,
   } = useFinancialData();
@@ -70,12 +102,13 @@ export function RecurringTransactions() {
       newTransaction.nextDate &&
       newTransaction.category
     ) {
-      addRecurringTransaction(newTransaction);
+      const dateStr = new Date(newTransaction.nextDate).toISOString().slice(0, 10);
+      addRecurringTransaction({ ...newTransaction, nextDate: dateStr });
       addTransaction({
         amount: newTransaction.amount,
         description: newTransaction.name,
         category: newTransaction.category,
-        date: newTransaction.nextDate,
+        date: dateStr,
         isRecurring: true,
         notes: "",
       });
@@ -89,6 +122,23 @@ export function RecurringTransactions() {
         frequency: "monthly",
       });
       setShowAddForm(false);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingTransaction) return;
+    const dateStr = new Date(editValues.nextDate).toISOString().slice(0, 10);
+    updateRecurringTransaction(editingTransaction.id, {
+      ...editValues,
+      nextDate: dateStr,
+    });
+    setEditingTransaction(null);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Supprimer cette transaction ?")) {
+      removeRecurringTransaction(id);
+      setEditingTransaction(null);
     }
   };
 
@@ -193,6 +243,7 @@ export function RecurringTransactions() {
                 <Label className="text-white">Prochaine date</Label>
                 <Input
                   type="date"
+                  pattern="\d{4}-\d{2}-\d{2}"
                   value={newTransaction.nextDate}
                   onChange={(e) =>
                     setNewTransaction((prev) => ({
@@ -232,6 +283,20 @@ export function RecurringTransactions() {
         {data.recurringTransactions.map((transaction) => (
           <div
             key={transaction.id}
+            onClick={() => {
+              setEditingTransaction(transaction);
+              setEditValues({
+                name: transaction.name,
+                amount: transaction.amount,
+                nextDate: new Date(transaction.nextDate)
+                  .toISOString()
+                  .slice(0, 10),
+                category: transaction.category,
+                logo: transaction.logo,
+                color: transaction.color,
+                frequency: transaction.frequency,
+              });
+            }}
             className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <div
@@ -286,6 +351,107 @@ export function RecurringTransactions() {
             </div>
           </div>
         )}
+
+        {editingTransaction && (
+          <Dialog
+            open={!!editingTransaction}
+            onOpenChange={() => setEditingTransaction(null)}
+          >
+            <DialogContent className="bg-slate-800 border-slate-700 text-white">
+              <DialogHeader>
+                <DialogTitle>Modifier la transaction</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Nom</Label>
+                  <Input
+                    value={editValues.name}
+                    onChange={(e) =>
+                      setEditValues((p) => ({ ...p, name: e.target.value }))
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Montant (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editValues.amount}
+                    onChange={(e) =>
+                      setEditValues((p) => ({
+                        ...p,
+                        amount: Number.parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Catégorie</Label>
+                  <Select
+                    value={editValues.category}
+                    onValueChange={(val) =>
+                      setEditValues((p) => ({ ...p, category: val }))
+                    }
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      <SelectItem value="Divertissement">Divertissement</SelectItem>
+                      <SelectItem value="Musique">Musique</SelectItem>
+                      <SelectItem value="Stockage">Stockage</SelectItem>
+                      <SelectItem value="Outils">Outils</SelectItem>
+                      <SelectItem value="Sport">Sport</SelectItem>
+                      <SelectItem value="Transport">Transport</SelectItem>
+                      <SelectItem value="Alimentation">Alimentation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Prochaine date</Label>
+                  <Input
+                    type="date"
+                    pattern="\d{4}-\d{2}-\d{2}"
+                    value={editValues.nextDate}
+                    onChange={(e) =>
+                      setEditValues((p) => ({ ...p, nextDate: e.target.value }))
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Logo/Emoji</Label>
+                  <Input
+                    value={editValues.logo}
+                    onChange={(e) =>
+                      setEditValues((p) => ({ ...p, logo: e.target.value }))
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    className="bg-purple-600 hover:bg-purple-700"
+                    onClick={handleSaveEdit}
+                  >
+                    Enregistrer
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleDelete(editingTransaction.id)}
+                  >
+                    Supprimer
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
       </CardContent>
     </Card>
   );

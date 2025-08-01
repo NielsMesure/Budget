@@ -102,17 +102,22 @@ export function useFinancialData() {
                     }))
                     const recurring = parsed
                         .filter((t) => t.isRecurring)
-                        .map((t) => ({
-                            id: t.id,
-                            name: t.description,
-                            amount: t.amount,
-                            nextDate: t.date,
-                            category: t.category,
-                            logo: "",
-                            color: "bg-blue-500",
-                            frequency: "monthly" as const,
-                            dayOfMonth: new Date(t.date).getDate(),
-                        }))
+                        .map((t) => {
+                            const dateStr = new Date(t.date)
+                                .toISOString()
+                                .slice(0, 10)
+                            return {
+                                id: t.id,
+                                name: t.description,
+                                amount: t.amount,
+                                nextDate: dateStr,
+                                category: t.category,
+                                logo: "",
+                                color: "bg-blue-500",
+                                frequency: "monthly" as const,
+                                dayOfMonth: new Date(dateStr).getDate(),
+                            }
+                        })
                     setData((prev) => ({
                         ...prev,
                         transactions: parsed,
@@ -158,9 +163,11 @@ export function useFinancialData() {
     }
 
     const addRecurringTransaction = (transaction: Omit<RecurringTransaction, "id" | "dayOfMonth">) => {
-        const dayOfMonth = new Date(transaction.nextDate).getDate()
+        const normalizedDate = new Date(transaction.nextDate).toISOString().slice(0, 10)
+        const dayOfMonth = new Date(normalizedDate).getDate()
         const newTransaction = {
             ...transaction,
+            nextDate: normalizedDate,
             id: Date.now(),
             dayOfMonth,
         }
@@ -171,9 +178,11 @@ export function useFinancialData() {
     }
 
     const addTransaction = (transaction: Omit<Transaction, "id">) => {
+        const normalizedDate = new Date(transaction.date).toISOString().slice(0, 10)
         const newTransaction = {
             ...transaction,
             amount: Number(transaction.amount) || 0,
+            date: normalizedDate,
             id: Date.now(),
         }
         setData((prev) => ({
@@ -185,6 +194,76 @@ export function useFinancialData() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, ...newTransaction })
+            }).catch(console.error)
+        }
+    }
+
+    const updateRecurringTransaction = (
+        id: number,
+        updates: Partial<Omit<RecurringTransaction, "id" | "dayOfMonth">>
+    ) => {
+        const normalizedDate = updates.nextDate
+            ? new Date(updates.nextDate).toISOString().slice(0, 10)
+            : undefined
+        setData((prev) => ({
+            ...prev,
+            recurringTransactions: prev.recurringTransactions.map((t) => {
+                if (t.id !== id) return t
+                const nextDate = normalizedDate ?? t.nextDate
+                return {
+                    ...t,
+                    ...updates,
+                    nextDate,
+                    dayOfMonth: new Date(nextDate).getDate(),
+                }
+            }),
+            transactions: prev.transactions.map((tx) => {
+                if (tx.id !== id) return tx
+                return {
+                    ...tx,
+                    amount: updates.amount ?? tx.amount,
+                    description: updates.name ?? tx.description,
+                    category: updates.category ?? tx.category,
+                    date: normalizedDate ?? tx.date,
+                }
+            }),
+        }))
+        if (userId) {
+            const tx = data.recurringTransactions.find((t) => t.id === id)
+            if (tx) {
+                const updated = {
+                    ...tx,
+                    ...updates,
+                    nextDate: normalizedDate ?? tx.nextDate,
+                }
+                fetch('/api/transactions', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id,
+                        userId,
+                        amount: updated.amount,
+                        description: updated.name,
+                        category: updated.category,
+                        date: updated.nextDate,
+                        notes: '',
+                    }),
+                }).catch(console.error)
+            }
+        }
+    }
+
+    const removeRecurringTransaction = (id: number) => {
+        setData((prev) => ({
+            ...prev,
+            recurringTransactions: prev.recurringTransactions.filter(
+                (t) => t.id !== id,
+            ),
+            transactions: prev.transactions.filter((tx) => tx.id !== id),
+        }))
+        if (userId) {
+            fetch(`/api/transactions?id=${id}&userId=${userId}`, {
+                method: 'DELETE',
             }).catch(console.error)
         }
     }
@@ -212,6 +291,8 @@ export function useFinancialData() {
         updateSalary,
         addAccount,
         addRecurringTransaction,
+        updateRecurringTransaction,
+        removeRecurringTransaction,
         addTransaction,
         totalAccountBalance,
         totalExpenses,

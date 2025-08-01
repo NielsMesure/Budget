@@ -20,3 +20,30 @@ export async function POST(req: Request) {
   ) as any
   return NextResponse.json({ id: result.insertId })
 }
+
+export async function PATCH(req: Request) {
+  const { id, userId, amount, description, category, date, notes } =
+    await req.json()
+  if (!id || !userId) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+  }
+  await pool.query(
+    'UPDATE transactions SET amount = ?, description = ?, category = ?, date = ?, notes = ? WHERE id = ? AND user_id = ?',
+    [amount, description, category, date, notes, id, userId],
+  )
+  return NextResponse.json({ ok: true })
+}
+
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  const userId = searchParams.get('userId')
+  if (!id || !userId) {
+    return NextResponse.json({ error: 'Missing params' }, { status: 400 })
+  }
+  await pool.query('DELETE FROM transactions WHERE id = ? AND user_id = ?', [
+    id,
+    userId,
+  ])
+  return NextResponse.json({ ok: true })
+}
