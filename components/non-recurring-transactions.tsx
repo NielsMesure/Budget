@@ -28,31 +28,20 @@ const categoryColors = {
     education: "bg-lime-500/20 text-lime-400 border-lime-500/30",
     other: "bg-gray-500/20 text-gray-400 border-gray-500/30",
 }
-
-export function RecentTransactions() {
+export function NonRecurringTransactions() {
     const { data } = useFinancialData()
 
-    // Combiner et trier les transactions
-    const allTransactions = [
-        ...data.transactions.map((t) => ({ ...t, type: "transaction" as const })),
-        ...data.recurringTransactions.map((t) => ({
-            ...t,
-            type: "recurring" as const,
-            date: t.nextDate,
-            description: t.name,
-            amount: t.amount,
-        })),
-    ]
+    const transactions = data.transactions
+        .filter((t) => !t.isRecurring)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 10)
 
-    if (allTransactions.length === 0) {
+    if (transactions.length === 0) {
         return (
             <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
                         <Clock className="h-5 w-5" />
-                        Transactions récentes
+                        Transactions non récurrentes
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center h-64">
@@ -70,24 +59,22 @@ export function RecentTransactions() {
             <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    Transactions récentes
+                    Transactions non récurrentes
                 </CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {allTransactions.map((transaction, index) => (
+                    {transactions.map((transaction) => (
                         <div
-                            key={`${transaction.type}-${transaction.id || index}`}
+                            key={transaction.id}
                             className="flex items-center justify-between p-3 rounded-lg bg-slate-700/30 hover:bg-slate-700/50 transition-colors"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="text-2xl">
-                                    {transaction.type === "recurring" && "logo" in transaction
-                                        ? transaction.logo
-                                        : categoryIcons[transaction.category as keyof typeof categoryIcons] || "💳"}
+                                    {categoryIcons[transaction.category as keyof typeof categoryIcons] || "💳"}
                                 </div>
                                 <div>
-                                    <div className="text-white font-medium">{transaction.description || transaction.name}</div>
+                                    <div className="text-white font-medium">{transaction.description}</div>
                                     <div className="flex items-center gap-2 mt-1">
                                         <Badge
                                             variant="outline"
@@ -97,11 +84,6 @@ export function RecentTransactions() {
                                         >
                                             {transaction.category}
                                         </Badge>
-                                        {transaction.type === "recurring" && (
-                                            <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                                                Récurrent
-                                            </Badge>
-                                        )}
                                     </div>
                                 </div>
                             </div>

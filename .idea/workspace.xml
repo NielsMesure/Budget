@@ -4,13 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5d3275e3-b625-421c-acad-50c1258ff3e0" name="Changes" comment="Commit Transaction récurrente Patch">
-      <change afterPath="$PROJECT_DIR$/components/expense-chart.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/components/recent-transactions.tsx" afterDir="false" />
+    <list default="true" id="5d3275e3-b625-421c-acad-50c1258ff3e0" name="Changes" comment="Commit Transaction tracking">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/dashboard/transactions/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/dashboard/transactions/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/transaction-form.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/transaction-form.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/ui/badge.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/badge.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +90,7 @@
       <updated>1753802415877</updated>
       <workItem from="1753802416937" duration="674000" />
       <workItem from="1753901935896" duration="2664000" />
-      <workItem from="1754171715440" duration="703000" />
+      <workItem from="1754171715440" duration="1705000" />
     </task>
     <task id="LOCAL-00001" summary="Commit salaire">
       <option name="closed" value="true" />
@@ -113,7 +108,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754051519334</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Commit Transaction tracking">
+      <option name="closed" value="true" />
+      <created>1754172514683</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1754172514683</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -123,6 +126,7 @@
     <MESSAGE value="First commit Budget App" />
     <MESSAGE value="Commit salaire" />
     <MESSAGE value="Commit Transaction récurrente Patch" />
-    <option name="LAST_COMMIT_MESSAGE" value="Commit Transaction récurrente Patch" />
+    <MESSAGE value="Commit Transaction tracking" />
+    <option name="LAST_COMMIT_MESSAGE" value="Commit Transaction tracking" />
   </component>
 </project>
