@@ -4,53 +4,66 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { useFinancialData } from "@/hooks/use-financial-data"
 
+// Budgets définis avec leurs montants alloués. Le montant dépensé est calculé
+// dynamiquement à partir des transactions.
 const budgets = [
   {
     id: 1,
-    category: "Alimentation",
+    category: "food",
+    label: "Alimentation",
     allocated: 400,
-    spent: 285.5,
     color: "bg-green-500",
     emoji: "🍽️",
   },
   {
     id: 2,
-    category: "Transport",
+    category: "transport",
+    label: "Transport",
     allocated: 150,
-    spent: 120.75,
     color: "bg-blue-500",
     emoji: "🚗",
   },
   {
     id: 3,
-    category: "Divertissement",
+    category: "entertainment",
+    label: "Divertissement",
     allocated: 200,
-    spent: 245.3,
     color: "bg-purple-500",
     emoji: "🎬",
   },
   {
     id: 4,
-    category: "Shopping",
+    category: "shopping",
+    label: "Shopping",
     allocated: 300,
-    spent: 180.25,
     color: "bg-yellow-500",
     emoji: "🛍️",
   },
   {
     id: 5,
-    category: "Santé",
+    category: "health",
+    label: "Santé",
     allocated: 100,
-    spent: 45.0,
     color: "bg-red-500",
     emoji: "⚕️",
   },
 ]
 
 export function BudgetManager() {
-  const totalAllocated = budgets.reduce((sum, budget) => sum + budget.allocated, 0)
-  const totalSpent = budgets.reduce((sum, budget) => sum + budget.spent, 0)
+  const { data } = useFinancialData()
+
+  // Calcule le montant dépensé pour chaque budget à partir des transactions
+  const budgetsWithSpent = budgets.map((budget) => {
+    const spent = data.transactions
+      .filter((t) => t.category === budget.category)
+      .reduce((sum, t) => sum + t.amount, 0)
+    return { ...budget, spent }
+  })
+
+  const totalAllocated = budgetsWithSpent.reduce((sum, budget) => sum + budget.allocated, 0)
+  const totalSpent = budgetsWithSpent.reduce((sum, budget) => sum + budget.spent, 0)
 
   return (
     <div className="space-y-6">
@@ -99,7 +112,7 @@ export function BudgetManager() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {budgets.map((budget) => {
+        {budgetsWithSpent.map((budget) => {
           const percentage = (budget.spent / budget.allocated) * 100
           const isOverBudget = budget.spent > budget.allocated
 
@@ -110,7 +123,7 @@ export function BudgetManager() {
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">{budget.emoji}</div>
                     <div>
-                      <h3 className="text-white font-semibold">{budget.category}</h3>
+                      <h3 className="text-white font-semibold">{budget.label}</h3>
                       <p className="text-slate-400 text-sm">
                         {budget.spent.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })} /{" "}
                         {budget.allocated.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
