@@ -24,9 +24,9 @@ const menuItems = [
     icon: Home,
   },
   {
-    title: "Comptes",
-    url: "/dashboard/accounts",
-    icon: CreditCard,
+    title: "Transactions",
+    url: "/dashboard/transactions",
+    icon: PlusCircle,
   },
   {
     title: "Budgets",
@@ -34,19 +34,9 @@ const menuItems = [
     icon: Target,
   },
   {
-    title: "Transactions",
-    url: "/dashboard/transactions",
-    icon: PlusCircle,
-  },
-  {
     title: "Analyse",
     url: "/dashboard/analytics",
     icon: BarChart3,
-  },
-  {
-    title: "Objectifs",
-    url: "/dashboard/goals",
-    icon: TrendingUp,
   },
 ]
 

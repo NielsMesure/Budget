@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="67fc053b-f6c0-4694-a25e-dc9193550d77" name="Changes" comment="Update chart for dashboard">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/expense-chart.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/expense-chart.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="67fc053b-f6c0-4694-a25e-dc9193550d77" name="Changes" comment="Update chart" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -28,6 +24,19 @@
   }
 }]]></component>
   <component name="TaskManager">
+    <task id="LOCAL-00001" summary="Update chart">
+      <option name="closed" value="true" />
+      <created>1756145214013</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1756145214013</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Update chart" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update chart" />
   </component>
 </project>
