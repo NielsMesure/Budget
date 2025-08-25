@@ -41,11 +41,14 @@ export function ExpenseChart() {
 
     // Ajouter les transactions récurrentes
     data.recurringTransactions.forEach((transaction) => {
-        const category = transaction.category as keyof typeof categoryColors
+        const category = transaction.category.toLowerCase() as keyof typeof categoryColors
         expensesByCategory[category] = (expensesByCategory[category] || 0) + transaction.amount
     })
 
     const totalExpenses = Object.values(expensesByCategory).reduce((sum, amount) => sum + amount, 0)
+
+    const totalPositive = data.salary
+    const remainingMoney = totalPositive - totalExpenses
 
     if (totalExpenses === 0) {
         return (
@@ -76,21 +79,28 @@ export function ExpenseChart() {
         currentAngle += angle
 
         // Calculer les coordonnées du segment
-        const radius = 80
+        const outerRadius = 80
+        const innerRadius = 50
         const centerX = 100
         const centerY = 100
 
-        const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180)
-        const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180)
-        const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180)
-        const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180)
+        const x1Outer = centerX + outerRadius * Math.cos((startAngle * Math.PI) / 180)
+        const y1Outer = centerY + outerRadius * Math.sin((startAngle * Math.PI) / 180)
+        const x2Outer = centerX + outerRadius * Math.cos((endAngle * Math.PI) / 180)
+        const y2Outer = centerY + outerRadius * Math.sin((endAngle * Math.PI) / 180)
+
+        const x1Inner = centerX + innerRadius * Math.cos((startAngle * Math.PI) / 180)
+        const y1Inner = centerY + innerRadius * Math.sin((startAngle * Math.PI) / 180)
+        const x2Inner = centerX + innerRadius * Math.cos((endAngle * Math.PI) / 180)
+        const y2Inner = centerY + innerRadius * Math.sin((endAngle * Math.PI) / 180)
 
         const largeArcFlag = angle > 180 ? 1 : 0
 
         const pathData = [
-            `M ${centerX} ${centerY}`,
-            `L ${x1} ${y1}`,
-            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+            `M ${x1Outer} ${y1Outer}`,
+            `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2Outer} ${y2Outer}`,
+            `L ${x2Inner} ${y2Inner}`,
+            `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1Inner} ${y1Inner}`,
             "Z",
         ].join(" ")
 
@@ -116,6 +126,7 @@ export function ExpenseChart() {
                     {/* Diagramme en cercle */}
                     <div className="relative">
                         <svg width="200" height="200" viewBox="0 0 200 200" className="transform -rotate-90">
+                            <circle cx="100" cy="100" r="50" fill="#000000" />
                             {segments.map((segment, index) => (
                                 <path
                                     key={segment.category}
@@ -125,13 +136,12 @@ export function ExpenseChart() {
                                 />
                             ))}
                         </svg>
-                        {/* Total au centre */}
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-white">
-                                    {totalExpenses.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                                <div className={`text-2xl font-bold mb-1 ${remainingMoney >= 0 ? "text-green-400" : "text-red-400"}`}>
+                                    {remainingMoney.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
                                 </div>
-                                <div className="text-sm text-slate-400">Total</div>
+                                <div className="text-xs text-slate-400">Argent restant</div>
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { FinancialMetrics } from "@/components/financial-metrics"
+import { ExpenseChart } from "@/components/expense-chart"
 import { CalendarView } from "@/components/calendar-view"
 import { RecurringTransactions } from "@/components/recurring-transactions"
 
@@ -10,6 +11,7 @@ export default function DashboardPage() {
         <FinancialMetrics />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
+            <ExpenseChart />
             <CalendarView />
           </div>
           <div>

@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5d3275e3-b625-421c-acad-50c1258ff3e0" name="Changes" comment="Commit Transaction tracking">
-      <change beforePath="$PROJECT_DIR$/components/budget-manager.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/budget-manager.tsx" afterDir="false" />
+    <list default="true" id="5d3275e3-b625-421c-acad-50c1258ff3e0" name="Changes" comment="Budget page">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/dashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/expense-chart.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/expense-chart.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,6 +93,9 @@
       <workItem from="1753802416937" duration="674000" />
       <workItem from="1753901935896" duration="2664000" />
       <workItem from="1754171715440" duration="1705000" />
+      <workItem from="1755629598112" duration="5000" />
+      <workItem from="1755887756818" duration="137000" />
+      <workItem from="1756141375928" duration="2048000" />
     </task>
     <task id="LOCAL-00001" summary="Commit salaire">
       <option name="closed" value="true" />
@@ -116,7 +121,15 @@
       <option name="project" value="LOCAL" />
       <updated>1754172514683</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Budget page">
+      <option name="closed" value="true" />
+      <created>1754216357056</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1754216357056</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -127,6 +140,7 @@
     <MESSAGE value="Commit salaire" />
     <MESSAGE value="Commit Transaction récurrente Patch" />
     <MESSAGE value="Commit Transaction tracking" />
-    <option name="LAST_COMMIT_MESSAGE" value="Commit Transaction tracking" />
+    <MESSAGE value="Budget page" />
+    <option name="LAST_COMMIT_MESSAGE" value="Budget page" />
   </component>
 </project>
