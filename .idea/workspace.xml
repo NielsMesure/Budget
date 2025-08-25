@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="67fc053b-f6c0-4694-a25e-dc9193550d77" name="Changes" comment="Update chart" />
+    <list default="true" id="67fc053b-f6c0-4694-a25e-dc9193550d77" name="Changes" comment="Update navigation">
+      <change beforePath="$PROJECT_DIR$/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/dashboard/page.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,11 +34,20 @@
       <option name="project" value="LOCAL" />
       <updated>1756145214013</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Update navigation">
+      <option name="closed" value="true" />
+      <created>1756145636870</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1756145636870</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Update chart" />
-    <option name="LAST_COMMIT_MESSAGE" value="Update chart" />
+    <MESSAGE value="Update navigation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update navigation" />
   </component>
 </project>
