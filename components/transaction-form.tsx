@@ -28,9 +28,10 @@ const categories = [
 ]
 
 export function TransactionForm() {
-  const { addTransaction, addRecurringTransaction } = useFinancialData()
+  const { addTransaction, addRecurringTransaction, addIncome } = useFinancialData()
   const [date, setDate] = useState<Date>()
   const [isRecurring, setIsRecurring] = useState(false)
+  const [isIncome, setIsIncome] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     amount: "",
@@ -44,14 +45,16 @@ export function TransactionForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.amount || !formData.category || !formData.description || !date) {
+    if (!formData.amount || (!isIncome && (!formData.category || !formData.description || !date))) {
       return
     }
 
     setIsSubmitting(true)
 
     try {
-      if (isRecurring) {
+      if (isIncome) {
+        addIncome(Number.parseFloat(formData.amount))
+      } else if (isRecurring) {
         addRecurringTransaction({
           name: formData.description,
           amount: Number.parseFloat(formData.amount),
@@ -83,6 +86,7 @@ export function TransactionForm() {
       })
       setDate(undefined)
       setIsRecurring(false)
+      setIsIncome(false)
     } catch (error) {
       console.error("Erreur lors de l'ajout de la transaction:", error)
     } finally {
@@ -101,6 +105,7 @@ export function TransactionForm() {
     })
     setDate(undefined)
     setIsRecurring(false)
+    setIsIncome(false)
   }
 
   return (
@@ -190,7 +195,26 @@ export function TransactionForm() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Switch id="recurring" checked={isRecurring} onCheckedChange={setIsRecurring} />
+              <Switch
+                id="income"
+                checked={isIncome}
+                onCheckedChange={(checked) => {
+                  setIsIncome(checked)
+                  if (checked) setIsRecurring(false)
+                }}
+              />
+              <Label htmlFor="income" className="text-white">
+                Ajouter au salaire
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+                disabled={isIncome}
+              />
               <Label htmlFor="recurring" className="text-white">
                 Transaction récurrente
               </Label>

@@ -151,6 +151,20 @@ function useFinancialDataState() {
         }
     }
 
+    const addIncome = (amount: number) => {
+        setData((prev) => {
+            const newSalary = (prev.salary || 0) + amount
+            if (userId) {
+                fetch('/api/salary', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, salary: newSalary }),
+                }).catch(console.error)
+            }
+            return { ...prev, salary: newSalary }
+        })
+    }
+
     const addAccount = (account: Omit<Account, "id">) => {
         const newAccount = {
             ...account,
@@ -289,6 +303,7 @@ function useFinancialDataState() {
         data,
         isLoaded,
         updateSalary,
+        addIncome,
         addAccount,
         addRecurringTransaction,
         updateRecurringTransaction,
