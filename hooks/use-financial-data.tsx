@@ -112,9 +112,9 @@ function useFinancialDataState() {
                                 amount: t.amount,
                                 nextDate: dateStr,
                                 category: t.category,
-                                logo: "",
+                                logo: t.logo || "",
                                 color: "bg-blue-500",
-                                frequency: "monthly" as const,
+                                frequency: (t.frequency || "monthly") as const,
                                 dayOfMonth: new Date(dateStr).getDate(),
                             }
                         })
@@ -189,6 +189,29 @@ function useFinancialDataState() {
             ...prev,
             recurringTransactions: [...(prev.recurringTransactions || []), newTransaction],
         }))
+        
+        // Also add as regular transaction to database with recurring flag
+        const dbTransaction = {
+            amount: newTransaction.amount,
+            description: newTransaction.name,
+            category: newTransaction.category,
+            date: normalizedDate,
+            notes: '',
+            isRecurring: true,
+            frequency: newTransaction.frequency,
+            logo: newTransaction.logo
+        }
+        
+        if (userId) {
+            fetch('/api/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    userId, 
+                    ...dbTransaction
+                })
+            }).catch(console.error)
+        }
     }
 
     const addTransaction = (transaction: Omit<Transaction, "id">) => {
@@ -207,7 +230,12 @@ function useFinancialDataState() {
             fetch('/api/transactions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, ...newTransaction })
+                body: JSON.stringify({ 
+                    userId, 
+                    ...newTransaction,
+                    frequency: null,
+                    logo: null
+                })
             }).catch(console.error)
         }
     }
@@ -261,6 +289,8 @@ function useFinancialDataState() {
                         category: updated.category,
                         date: updated.nextDate,
                         notes: '',
+                        frequency: updated.frequency,
+                        logo: updated.logo,
                     }),
                 }).catch(console.error)
             }
