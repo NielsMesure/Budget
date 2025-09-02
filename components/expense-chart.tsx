@@ -1,8 +1,10 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useFinancialData } from "@/hooks/use-financial-data"
 import { PieChart } from "lucide-react"
+import { useState } from "react"
 
 const categoryColors = {
     food: "#10b981",
@@ -28,9 +30,75 @@ const categoryLabels = {
 
 export function ExpenseChart() {
     const { data } = useFinancialData()
+    const [selectedPeriod, setSelectedPeriod] = useState("all")
 
-    // Calculer les dépenses par catégorie
-    const expensesByCategory = data.transactions.reduce(
+    // Générer les options de période
+    const getPeriodOptions = () => {
+        const options = [
+            { value: "all", label: "Total depuis le début" },
+            { value: "current", label: "Ce mois" },
+        ]
+
+        // Ajouter les mois précédents disponibles basés sur les transactions
+        const availableMonths = new Set<string>()
+        data.transactions.forEach(transaction => {
+            const date = new Date(transaction.date)
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+            availableMonths.add(monthKey)
+        })
+
+        const currentDate = new Date()
+        const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
+        
+        // Trier les mois et ajouter ceux qui ne sont pas le mois actuel
+        Array.from(availableMonths)
+            .filter(month => month !== currentMonth)
+            .sort((a, b) => b.localeCompare(a)) // Plus récent en premier
+            .slice(0, 6) // Limiter à 6 mois précédents
+            .forEach(month => {
+                const [year, monthNum] = month.split('-')
+                const date = new Date(parseInt(year), parseInt(monthNum) - 1)
+                const monthName = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+                options.push({ 
+                    value: month, 
+                    label: monthName.charAt(0).toUpperCase() + monthName.slice(1)
+                })
+            })
+
+        return options
+    }
+
+    // Filtrer les transactions selon la période sélectionnée
+    const getFilteredTransactions = () => {
+        if (selectedPeriod === "all") {
+            return data.transactions
+        }
+        
+        if (selectedPeriod === "current") {
+            const currentDate = new Date()
+            const currentMonth = currentDate.getMonth()
+            const currentYear = currentDate.getFullYear()
+            
+            return data.transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date)
+                return transactionDate.getMonth() === currentMonth && 
+                       transactionDate.getFullYear() === currentYear
+            })
+        }
+        
+        // Pour un mois spécifique (format: YYYY-MM)
+        const [year, month] = selectedPeriod.split('-').map(Number)
+        return data.transactions.filter(transaction => {
+            const transactionDate = new Date(transaction.date)
+            return transactionDate.getMonth() === month - 1 && 
+                   transactionDate.getFullYear() === year
+        })
+    }
+
+    const filteredTransactions = getFilteredTransactions()
+
+    // Calculer les dépenses par catégorie pour les transactions filtrées
+    const expensesByCategory = filteredTransactions.reduce(
         (acc, transaction) => {
             const category = transaction.category as keyof typeof categoryColors
             acc[category] = (acc[category] || 0) + transaction.amount
@@ -39,11 +107,13 @@ export function ExpenseChart() {
         {} as Record<string, number>,
     )
 
-    // Ajouter les transactions récurrentes
-    data.recurringTransactions.forEach((transaction) => {
-        const category = transaction.category.toLowerCase() as keyof typeof categoryColors
-        expensesByCategory[category] = (expensesByCategory[category] || 0) + transaction.amount
-    })
+    // Ajouter les transactions récurrentes seulement si "all" est sélectionné
+    if (selectedPeriod === "all") {
+        data.recurringTransactions.forEach((transaction) => {
+            const category = transaction.category.toLowerCase() as keyof typeof categoryColors
+            expensesByCategory[category] = (expensesByCategory[category] || 0) + transaction.amount
+        })
+    }
 
     const totalExpenses = Object.values(expensesByCategory).reduce((sum, amount) => sum + amount, 0)
 
@@ -51,22 +121,40 @@ export function ExpenseChart() {
     const remainingMoney = totalPositive - totalExpenses
 
     if (totalExpenses === 0) {
-        return (
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-                <CardHeader>
+    return (
+        <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader>
+                <div className="flex items-center justify-between">
                     <CardTitle className="text-white flex items-center gap-2">
                         <PieChart className="h-5 w-5" />
                         Répartition des dépenses
                     </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center h-64">
-                    <div className="text-center text-slate-400">
-                        <PieChart className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>Aucune dépense enregistrée</p>
-                    </div>
-                </CardContent>
-            </Card>
-        )
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                        <SelectTrigger className="w-[200px] bg-slate-700 border-slate-600 text-white">
+                            <SelectValue placeholder="Choisir une période" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-700 border-slate-600">
+                            {getPeriodOptions().map(option => (
+                                <SelectItem 
+                                    key={option.value} 
+                                    value={option.value}
+                                    className="text-white hover:bg-slate-600"
+                                >
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center h-64">
+                <div className="text-center text-slate-400">
+                    <PieChart className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucune dépense enregistrée pour cette période</p>
+                </div>
+            </CardContent>
+        </Card>
+    )
     }
 
     // Créer les segments du diagramme
@@ -113,10 +201,28 @@ export function ExpenseChart() {
     return (
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
             <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                    <PieChart className="h-5 w-5" />
-                    Répartition des dépenses
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-white flex items-center gap-2">
+                        <PieChart className="h-5 w-5" />
+                        Répartition des dépenses
+                    </CardTitle>
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                        <SelectTrigger className="w-[200px] bg-slate-700 border-slate-600 text-white">
+                            <SelectValue placeholder="Choisir une période" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-700 border-slate-600">
+                            {getPeriodOptions().map(option => (
+                                <SelectItem 
+                                    key={option.value} 
+                                    value={option.value}
+                                    className="text-white hover:bg-slate-600"
+                                >
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col lg:flex-row items-center gap-6">
