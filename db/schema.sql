@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS budgets (
   user_id INT NOT NULL,
   category VARCHAR(255) NOT NULL,
   allocated DECIMAL(10,2) NOT NULL,
+  percentage DECIMAL(5,2) NULL,
   spent DECIMAL(10,2) DEFAULT 0,
   color VARCHAR(50),
   emoji VARCHAR(20),
