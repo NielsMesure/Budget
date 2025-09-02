@@ -39,6 +39,17 @@ interface FinancialData {
     salary: number
     recurringTransactions: RecurringTransaction[]
     transactions: Transaction[]
+    budgets: Budget[]
+}
+
+interface Budget {
+    id: number
+    category: string
+    allocated?: number
+    percentage?: number
+    spent: number
+    color: string
+    emoji: string
 }
 
 function useFinancialDataState() {
@@ -47,6 +58,7 @@ function useFinancialDataState() {
         salary: 0,
         recurringTransactions: [],
         transactions: [],
+        budgets: [],
     })
     const [isLoaded, setIsLoaded] = useState(false)
     const [userId, setUserId] = useState<string | null>(null)
@@ -75,6 +87,7 @@ function useFinancialDataState() {
                         ...t,
                         amount: Number(t.amount) || 0,
                     })),
+                    budgets: parsedData.budgets || [],
                 })
             } catch (error) {
                 console.error("Error parsing saved data:", error)
@@ -101,8 +114,8 @@ function useFinancialDataState() {
                         isRecurring: !!t.is_recurring,
                     }))
                     const recurring = parsed
-                        .filter((t) => t.isRecurring)
-                        .map((t) => {
+                        .filter((t: any) => t.isRecurring)
+                        .map((t: any) => {
                             const dateStr = new Date(t.date)
                                 .toISOString()
                                 .slice(0, 10)
@@ -114,7 +127,7 @@ function useFinancialDataState() {
                                 category: t.category,
                                 logo: t.logo || "",
                                 color: "bg-blue-500",
-                                frequency: (t.frequency || "monthly") as const,
+                                frequency: (t.frequency || "monthly") as "weekly" | "monthly" | "quarterly" | "yearly",
                                 dayOfMonth: new Date(dateStr).getDate(),
                             }
                         })
@@ -122,6 +135,20 @@ function useFinancialDataState() {
                         ...prev,
                         transactions: parsed,
                         recurringTransactions: recurring,
+                    }))
+                }
+                
+                const resBudgets = await fetch(`/api/budgets?userId=${uid}`)
+                if (resBudgets.ok) {
+                    const budgets = await resBudgets.json()
+                    setData((prev) => ({
+                        ...prev,
+                        budgets: budgets.map((b: any) => ({
+                            ...b,
+                            allocated: b.allocated ? Number(b.allocated) : undefined,
+                            percentage: b.percentage ? Number(b.percentage) : undefined,
+                            spent: Number(b.spent) || 0,
+                        })),
                     }))
                 }
             } catch (e) {
@@ -312,6 +339,78 @@ function useFinancialDataState() {
         }
     }
 
+    const addBudget = (budget: Omit<Budget, "id" | "spent">) => {
+        if (userId) {
+            fetch('/api/budgets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    userId, 
+                    ...budget
+                })
+            }).then(async (response) => {
+                if (response.ok) {
+                    const result = await response.json()
+                    const newBudget = {
+                        ...budget,
+                        id: result.id,
+                        spent: 0,
+                    }
+                    setData((prev) => ({
+                        ...prev,
+                        budgets: [...(prev.budgets || []), newBudget],
+                    }))
+                }
+            }).catch(console.error)
+        }
+    }
+
+    const updateBudget = (id: number, updates: Partial<Omit<Budget, "id" | "spent">>) => {
+        if (userId) {
+            const currentBudget = data.budgets.find(b => b.id === id)
+            if (currentBudget) {
+                const updatedBudget = { ...currentBudget, ...updates }
+                fetch('/api/budgets', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id,
+                        userId, 
+                        category: updatedBudget.category,
+                        allocated: updatedBudget.allocated,
+                        percentage: updatedBudget.percentage,
+                        color: updatedBudget.color,
+                        emoji: updatedBudget.emoji
+                    })
+                }).then(async (response) => {
+                    if (response.ok) {
+                        setData((prev) => ({
+                            ...prev,
+                            budgets: prev.budgets.map(b => 
+                                b.id === id ? { ...b, ...updates } : b
+                            ),
+                        }))
+                    }
+                }).catch(console.error)
+            }
+        }
+    }
+
+    const removeBudget = (id: number) => {
+        if (userId) {
+            fetch(`/api/budgets?id=${id}&userId=${userId}`, {
+                method: 'DELETE',
+            }).then(async (response) => {
+                if (response.ok) {
+                    setData((prev) => ({
+                        ...prev,
+                        budgets: prev.budgets.filter(b => b.id !== id),
+                    }))
+                }
+            }).catch(console.error)
+        }
+    }
+
     // Calculs dérivés avec vérifications de sécurité
     const totalAccountBalance = (data.accounts || []).reduce(
         (sum, account) => sum + (Number(account.balance) || 0),
@@ -339,6 +438,9 @@ function useFinancialDataState() {
         updateRecurringTransaction,
         removeRecurringTransaction,
         addTransaction,
+        addBudget,
+        updateBudget,
+        removeBudget,
         totalAccountBalance,
         totalExpenses,
         totalRecurringExpenses,
