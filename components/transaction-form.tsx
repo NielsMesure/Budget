@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,8 @@ import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useFinancialData } from "@/hooks/use-financial-data"
 
-const categories = [
+// Default categories for backward compatibility
+const defaultCategories = [
   { value: "food", label: "Alimentation", icon: "🍽️" },
   { value: "transport", label: "Transport", icon: "🚗" },
   { value: "entertainment", label: "Divertissement", icon: "🎬" },
@@ -27,12 +28,19 @@ const categories = [
   { value: "other", label: "Autre", icon: "💳" },
 ]
 
+interface Budget {
+  id: number
+  category: string
+  emoji: string
+}
+
 export function TransactionForm() {
   const { addTransaction, addRecurringTransaction, addIncome } = useFinancialData()
   const [date, setDate] = useState<Date>()
   const [isRecurring, setIsRecurring] = useState(false)
   const [isIncome, setIsIncome] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [budgetCategories, setBudgetCategories] = useState<Budget[]>([])
   const [formData, setFormData] = useState({
     amount: "",
     category: "",
@@ -41,6 +49,38 @@ export function TransactionForm() {
     frequency: "monthly",
     logo: "",
   })
+
+  // Fetch user's budget categories
+  useEffect(() => {
+    const fetchBudgetCategories = async () => {
+      try {
+        const userId = localStorage.getItem("userId")
+        if (!userId) return
+
+        const response = await fetch(`/api/budgets?userId=${userId}`)
+        if (response.ok) {
+          const budgets = await response.json()
+          setBudgetCategories(budgets)
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des catégories:", error)
+      }
+    }
+
+    fetchBudgetCategories()
+  }, [])
+
+  // Combine budget categories with default categories
+  const allCategories = [
+    ...budgetCategories.map(budget => ({
+      value: budget.category,
+      label: budget.category,
+      icon: budget.emoji
+    })),
+    ...defaultCategories.filter(defaultCat => 
+      !budgetCategories.some(budget => budget.category.toLowerCase() === defaultCat.value.toLowerCase())
+    )
+  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,17 +94,18 @@ export function TransactionForm() {
     try {
       if (isIncome) {
         addIncome(Number.parseFloat(formData.amount))
-      } else if (isRecurring) {
+      } else if (isRecurring && date) {
+        const selectedCategory = allCategories.find(c => c.value === formData.category)
         addRecurringTransaction({
           name: formData.description,
           amount: Number.parseFloat(formData.amount),
           nextDate: date.toISOString().split("T")[0],
           category: formData.category,
-          logo: formData.logo || categories.find((c) => c.value === formData.category)?.icon || "💳",
+          logo: formData.logo || selectedCategory?.icon || "💳",
           color: "bg-blue-500",
           frequency: formData.frequency as any,
         })
-      } else {
+      } else if (date) {
         addTransaction({
           amount: Number.parseFloat(formData.amount),
           description: formData.description,
@@ -148,14 +189,36 @@ export function TransactionForm() {
                     <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-700 border-slate-600">
-                    {categories.map((cat) => (
+                    {budgetCategories.length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                          Mes budgets
+                        </div>
+                        {budgetCategories.map((budget) => (
+                          <SelectItem key={budget.id} value={budget.category}>
+                            <div className="flex items-center gap-2">
+                              <span>{budget.emoji}</span>
+                              <span>{budget.category}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                        <div className="px-2 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                          Catégories générales
+                        </div>
+                      </>
+                    )}
+                    {defaultCategories
+                      .filter(defaultCat => 
+                        !budgetCategories.some(budget => budget.category.toLowerCase() === defaultCat.value.toLowerCase())
+                      )
+                      .map((cat) => (
                         <SelectItem key={cat.value} value={cat.value}>
                           <div className="flex items-center gap-2">
                             <span>{cat.icon}</span>
                             <span>{cat.label}</span>
                           </div>
                         </SelectItem>
-                    ))}
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
