@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus } from "lucide-react"
+import { Plus, ChevronDown, ChevronUp } from "lucide-react"
 import { useFinancialData } from "@/hooks/use-financial-data"
 
 // Emojis organisés par catégories pour faciliter la sélection
@@ -98,10 +98,32 @@ export function BudgetForm() {
   const [percentage, setPercentage] = useState("")
   const [selectedEmoji, setSelectedEmoji] = useState(ALL_EMOJIS[0])
   const [selectedColor, setSelectedColor] = useState(ALL_COLORS[0])
+  const [expandedEmojiCategories, setExpandedEmojiCategories] = useState<Set<string>>(new Set())
+  const [expandedColorCategories, setExpandedColorCategories] = useState<Set<string>>(new Set())
   const { addBudget, data } = useFinancialData()
 
   const calculatedAmount = isPercentage && percentage ? 
     (data.salary * parseFloat(percentage)) / 100 : 0
+
+  const toggleEmojiCategory = (categoryName: string) => {
+    const newSet = new Set(expandedEmojiCategories)
+    if (newSet.has(categoryName)) {
+      newSet.delete(categoryName)
+    } else {
+      newSet.add(categoryName)
+    }
+    setExpandedEmojiCategories(newSet)
+  }
+
+  const toggleColorCategory = (categoryName: string) => {
+    const newSet = new Set(expandedColorCategories)
+    if (newSet.has(categoryName)) {
+      newSet.delete(categoryName)
+    } else {
+      newSet.add(categoryName)
+    }
+    setExpandedColorCategories(newSet)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -125,6 +147,8 @@ export function BudgetForm() {
     setSelectedEmoji(ALL_EMOJIS[0])
     setSelectedColor(ALL_COLORS[0])
     setIsPercentage(false)
+    setExpandedEmojiCategories(new Set())
+    setExpandedColorCategories(new Set())
     setIsOpen(false)
   }
 
@@ -211,49 +235,105 @@ export function BudgetForm() {
           <div className="space-y-2">
             <Label>Emoji</Label>
             <div className="space-y-3">
-              {Object.entries(EMOJI_CATEGORIES).map(([category, emojis]) => (
-                <div key={category} className="space-y-2">
-                  <h4 className="text-sm font-medium text-slate-300">{category}</h4>
-                  <div className="grid grid-cols-10 gap-1">
-                    {emojis.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => setSelectedEmoji(emoji)}
-                        className={`p-2 rounded text-lg hover:bg-slate-600 transition-colors ${
-                          selectedEmoji === emoji ? 'bg-purple-600' : 'bg-slate-700'
-                        }`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
+              {Object.entries(EMOJI_CATEGORIES).map(([categoryName, emojis]) => {
+                const isExpanded = expandedEmojiCategories.has(categoryName)
+                const displayedEmojis = isExpanded ? emojis : emojis.slice(0, 10)
+                
+                return (
+                  <div key={categoryName} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-slate-300">{categoryName}</h4>
+                      {emojis.length > 10 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleEmojiCategory(categoryName)}
+                          className="h-6 px-2 text-slate-400 hover:text-white"
+                        >
+                          {isExpanded ? (
+                            <>
+                              <ChevronUp className="h-3 w-3 mr-1" />
+                              Réduire
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-3 w-3 mr-1" />
+                              Voir plus ({emojis.length - 10})
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-10 gap-1">
+                      {displayedEmojis.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => setSelectedEmoji(emoji)}
+                          className={`p-2 rounded text-lg hover:bg-slate-600 transition-colors ${
+                            selectedEmoji === emoji ? 'bg-purple-600' : 'bg-slate-700'
+                          }`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Couleur</Label>
             <div className="space-y-3">
-              {Object.entries(COLOR_PALETTE).map(([category, colors]) => (
-                <div key={category} className="space-y-2">
-                  <h4 className="text-sm font-medium text-slate-300">{category}</h4>
-                  <div className="grid grid-cols-11 gap-1">
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setSelectedColor(color)}
-                        className={`w-8 h-8 rounded-full ${color} hover:scale-110 transition-transform ${
-                          selectedColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-800' : ''
-                        }`}
-                        title={color}
-                      />
-                    ))}
+              {Object.entries(COLOR_PALETTE).map(([categoryName, colors]) => {
+                const isExpanded = expandedColorCategories.has(categoryName)
+                const displayedColors = isExpanded ? colors : colors.slice(0, 11)
+                
+                return (
+                  <div key={categoryName} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-slate-300">{categoryName}</h4>
+                      {colors.length > 11 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleColorCategory(categoryName)}
+                          className="h-6 px-2 text-slate-400 hover:text-white"
+                        >
+                          {isExpanded ? (
+                            <>
+                              <ChevronUp className="h-3 w-3 mr-1" />
+                              Réduire
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-3 w-3 mr-1" />
+                              Voir plus ({colors.length - 11})
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-11 gap-1">
+                      {displayedColors.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setSelectedColor(color)}
+                          className={`w-8 h-8 rounded-full ${color} hover:scale-110 transition-transform ${
+                            selectedColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-800' : ''
+                          }`}
+                          title={color}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
