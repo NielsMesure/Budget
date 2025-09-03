@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ChevronLeft, ChevronRight, Plus, Check } from "lucide-react"
 import { useFinancialData } from "@/hooks/use-financial-data"
 
-const categories = [
+const defaultCategories = [
   { value: "food", label: "Alimentation", icon: "🍽️" },
   { value: "transport", label: "Transport", icon: "🚗" },
   { value: "entertainment", label: "Divertissement", icon: "🎬" },
@@ -37,6 +37,18 @@ export function CalendarView() {
     frequency: "monthly",
     logo: "",
   })
+
+  // Combine default categories with budget categories, avoiding duplicates
+  const categories = [
+    ...defaultCategories,
+    ...(data.budgets || [])
+      .filter(budget => !defaultCategories.some(defaultCat => defaultCat.value === budget.category))
+      .map(budget => ({
+        value: budget.category,
+        label: budget.category.charAt(0).toUpperCase() + budget.category.slice(1),
+        icon: budget.emoji || "💳"
+      }))
+  ]
 
   const monthNames = [
     "Janvier",
