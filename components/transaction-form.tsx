@@ -16,7 +16,7 @@ import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useFinancialData } from "@/hooks/use-financial-data"
 
-const categories = [
+const defaultCategories = [
   { value: "food", label: "Alimentation", icon: "🍽️" },
   { value: "transport", label: "Transport", icon: "🚗" },
   { value: "entertainment", label: "Divertissement", icon: "🎬" },
@@ -28,7 +28,7 @@ const categories = [
 ]
 
 export function TransactionForm() {
-  const { addTransaction, addRecurringTransaction, addIncome } = useFinancialData()
+  const { addTransaction, addRecurringTransaction, addIncome, data } = useFinancialData()
   const [date, setDate] = useState<Date>()
   const [isRecurring, setIsRecurring] = useState(false)
   const [isIncome, setIsIncome] = useState(false)
@@ -41,6 +41,18 @@ export function TransactionForm() {
     frequency: "monthly",
     logo: "",
   })
+
+  // Combine default categories with budget categories, avoiding duplicates
+  const categories = [
+    ...defaultCategories,
+    ...(data.budgets || [])
+      .filter(budget => !defaultCategories.some(defaultCat => defaultCat.value === budget.category))
+      .map(budget => ({
+        value: budget.category,
+        label: budget.category.charAt(0).toUpperCase() + budget.category.slice(1),
+        icon: budget.emoji || "💳"
+      }))
+  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,6 +67,7 @@ export function TransactionForm() {
       if (isIncome) {
         addIncome(Number.parseFloat(formData.amount))
       } else if (isRecurring) {
+        if (!date) return
         addRecurringTransaction({
           name: formData.description,
           amount: Number.parseFloat(formData.amount),
@@ -65,6 +78,7 @@ export function TransactionForm() {
           frequency: formData.frequency as any,
         })
       } else {
+        if (!date) return
         addTransaction({
           amount: Number.parseFloat(formData.amount),
           description: formData.description,
