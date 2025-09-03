@@ -3,7 +3,7 @@ import { AuthForm } from "@/components/auth-form"
 
 export default function HomePage() {
   // In a real app, check if user is authenticated
-  const isAuthenticated = true
+  const isAuthenticated = false
 
   if (isAuthenticated) {
     redirect("/dashboard")
