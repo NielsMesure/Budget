@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   if (!email || !password) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
-  const [rows] = await pool.query('SELECT id, name, email, password FROM users WHERE email = ?', [email]) as any
+  const [rows] = await pool.query('SELECT id, name, email, password, is_admin FROM users WHERE email = ?', [email]) as any
   const user = rows[0]
   if (!user) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
@@ -16,5 +16,10 @@ export async function POST(req: Request) {
   if (!match) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
   }
-  return NextResponse.json({ id: user.id, name: user.name, email: user.email })
+  return NextResponse.json({ 
+    id: user.id, 
+    name: user.name, 
+    email: user.email, 
+    isAdmin: user.is_admin 
+  })
 }
