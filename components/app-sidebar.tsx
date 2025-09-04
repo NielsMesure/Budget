@@ -1,8 +1,9 @@
 "use client"
 
-import { BarChart3, CreditCard, Home, PlusCircle, Settings, Target, TrendingUp, LogOut } from "lucide-react"
+import { BarChart3, CreditCard, Home, PlusCircle, Settings, Target, TrendingUp, LogOut, Shield } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 import {
   Sidebar,
@@ -43,10 +44,24 @@ const menuItems = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const userDataString = localStorage.getItem('userData')
+    if (userDataString) {
+      try {
+        const userData = JSON.parse(userDataString)
+        setIsAdmin(userData.isAdmin || false)
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+      }
+    }
+  }, [])
 
   const handleLogout = () => {
     console.log('Logout clicked')
     localStorage.removeItem("userId")
+    localStorage.removeItem("userData")
     router.push("/")
   }
 
@@ -87,6 +102,16 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4">
         <SidebarMenu>
+          {isAdmin && (
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="text-slate-300 hover:text-white hover:bg-slate-700">
+                <Link href="/admin">
+                  <Shield className="w-4 h-4" />
+                  <span>Administration</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="text-slate-300 hover:text-white hover:bg-slate-700">
               <Link href="/dashboard/settings">

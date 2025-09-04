@@ -32,6 +32,7 @@ export function AuthForm() {
       const data = await res.json()
       if (data.id) {
         localStorage.setItem("userId", data.id.toString())
+        localStorage.setItem("userData", JSON.stringify(data))
       }
       router.push("/dashboard")
     } else {
@@ -58,10 +59,17 @@ export function AuthForm() {
       const data = await res.json()
       if (data.id) {
         localStorage.setItem("userId", data.id.toString())
+        localStorage.setItem("userData", JSON.stringify(data))
       }
       router.push("/onboarding")
     } else {
-      alert("Erreur lors de l'inscription")
+      const data = await res.json()
+      if (res.status === 403 && data.error === 'Setup required') {
+        alert("La configuration initiale n'a pas été effectuée. Redirection vers la page de configuration...")
+        router.push("/setup")
+      } else {
+        alert("Erreur lors de l'inscription")
+      }
     }
   }
 
