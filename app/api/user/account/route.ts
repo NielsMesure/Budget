@@ -42,10 +42,7 @@ export async function DELETE(req: Request) {
       // Delete user's transactions
       await connection.query('DELETE FROM transactions WHERE user_id = ?', [userId])
       
-      // Delete user's salary data
-      await connection.query('DELETE FROM salary WHERE user_id = ?', [userId])
-      
-      // Finally delete the user account
+      // Finally delete the user account (salary is stored as a column in users table)
       await connection.query('DELETE FROM users WHERE id = ?', [userId])
 
       await connection.commit()
