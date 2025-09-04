@@ -59,7 +59,7 @@ export function AuthForm() {
       if (data.id) {
         localStorage.setItem("userId", data.id.toString())
       }
-      router.push("/dashboard")
+      router.push("/onboarding")
     } else {
       alert("Erreur lors de l'inscription")
     }
