@@ -1,8 +1,8 @@
 "use client"
 
-import { BarChart3, CreditCard, Home, PlusCircle, Settings, Target, TrendingUp } from "lucide-react"
+import { BarChart3, CreditCard, Home, PlusCircle, Settings, Target, TrendingUp, LogOut } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 import {
   Sidebar,
@@ -42,6 +42,13 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    console.log('Logout clicked')
+    localStorage.removeItem("userId")
+    router.push("/")
+  }
 
   return (
     <Sidebar className="bg-slate-800 border-slate-700">
@@ -81,9 +88,17 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="text-slate-300 hover:text-white hover:bg-slate-700">
-              <Settings className="w-4 h-4" />
-              <span>Paramètres</span>
+            <SidebarMenuButton asChild className="text-slate-300 hover:text-white hover:bg-slate-700">
+              <Link href="/dashboard/settings">
+                <Settings className="w-4 h-4" />
+                <span>Paramètres</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="text-slate-300 hover:text-white hover:bg-slate-700 cursor-pointer">
+              <LogOut className="w-4 h-4" />
+              <span>Déconnexion</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
