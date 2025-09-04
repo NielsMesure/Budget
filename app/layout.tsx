@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import { FinancialDataProvider } from '@/hooks/use-financial-data'
+import { Toaster } from '@/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -29,6 +30,7 @@ html {
       <body>
         <FinancialDataProvider>
           {children}
+          <Toaster />
         </FinancialDataProvider>
       </body>
     </html>
