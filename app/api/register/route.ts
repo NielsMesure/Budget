@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { pool } from '@/lib/db'
+import { EmailService } from '@/lib/services/email'
 
 export async function POST(req: Request) {
   const { name, email, password } = await req.json()
@@ -20,6 +21,14 @@ export async function POST(req: Request) {
   }
   const hashed = await bcrypt.hash(password, 10)
   const [result] = await pool.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashed]) as any
+  
+  // Send welcome email
+  try {
+    await EmailService.sendAccountCreationEmail(email, name || 'Utilisateur')
+  } catch (error) {
+    console.log('Failed to send welcome email:', error)
+    // Don't fail registration if email fails
+  }
   
   // Return the created user data
   return NextResponse.json({ 
