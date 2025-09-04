@@ -20,5 +20,12 @@ export async function POST(req: Request) {
   }
   const hashed = await bcrypt.hash(password, 10)
   const [result] = await pool.query('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashed]) as any
-  return NextResponse.json({ id: result.insertId })
+  
+  // Return the created user data
+  return NextResponse.json({ 
+    id: result.insertId, 
+    name, 
+    email, 
+    isAdmin: false 
+  })
 }

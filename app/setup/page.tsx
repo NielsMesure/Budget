@@ -64,8 +64,18 @@ export default function SetupPage() {
 
       if (res.ok) {
         setSetupComplete(true)
-        // Redirect to home page after 3 seconds
-        setTimeout(() => router.push("/"), 3000)
+        // Store admin user data
+        if (data.id) {
+          localStorage.setItem("userId", data.id.toString())
+          localStorage.setItem("userData", JSON.stringify({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            isAdmin: data.isAdmin
+          }))
+        }
+        // Redirect to dashboard after 3 seconds since they're now logged in as admin
+        setTimeout(() => router.push("/dashboard"), 3000)
       } else {
         setError(data.error || "Erreur lors de la création de l'administrateur")
       }
@@ -118,8 +128,8 @@ export default function SetupPage() {
             <Alert className="border-green-500 bg-green-500/10">
               <CheckCircle className="h-4 w-4 text-green-500" />
               <AlertDescription className="text-green-200">
-                Administrateur créé avec succès ! La configuration est terminée.
-                Redirection vers la page d'accueil...
+                Administrateur créé avec succès ! Vous êtes maintenant connecté en tant qu'administrateur.
+                Redirection vers le tableau de bord...
               </AlertDescription>
             </Alert>
           </CardContent>

@@ -31,7 +31,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      adminId: result.insertId,
+      id: result.insertId,
+      name,
+      email,
+      isAdmin: true,
       message: 'Administrator created successfully' 
     })
   } catch (error) {
