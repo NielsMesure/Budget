@@ -9,7 +9,8 @@ import {
   Activity,
   LogOut,
   Home,
-  ChevronLeft
+  ChevronLeft,
+  Mail
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -37,6 +38,11 @@ const adminMenuItems = [
     title: "Utilisateurs",
     url: "/admin/users",
     icon: Users,
+  },
+  {
+    title: "Configuration Email",
+    url: "/admin/email",
+    icon: Mail,
   },
   {
     title: "Paramètres système",
