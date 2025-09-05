@@ -4,8 +4,8 @@ import { pool } from '@/lib/db'
 export async function GET() {
   try {
     const [rows] = await pool.query(
-      'SELECT config_key, config_value FROM email_config WHERE config_key IN (?, ?, ?, ?)',
-      ['brevo_api_key', 'brevo_sender_name', 'brevo_sender_email', 'smtp_enabled']
+      'SELECT config_key, config_value FROM email_config WHERE config_key IN (?, ?, ?, ?, ?, ?, ?)',
+      ['brevo_smtp_server', 'brevo_smtp_port', 'brevo_smtp_username', 'brevo_smtp_password', 'brevo_sender_name', 'brevo_sender_email', 'smtp_enabled']
     ) as any
 
     const config: Record<string, string> = {}
@@ -13,11 +13,20 @@ export async function GET() {
       config[row.config_key] = row.config_value || ''
     })
 
-    // Ensure all required keys exist
-    const requiredKeys = ['brevo_api_key', 'brevo_sender_name', 'brevo_sender_email', 'smtp_enabled']
-    requiredKeys.forEach(key => {
+    // Ensure all required keys exist with defaults
+    const defaultConfig = {
+      brevo_smtp_server: 'smtp-relay.brevo.com',
+      brevo_smtp_port: '587',
+      brevo_smtp_username: '',
+      brevo_smtp_password: '',
+      brevo_sender_name: 'Budget App',
+      brevo_sender_email: '',
+      smtp_enabled: 'true'
+    }
+
+    Object.keys(defaultConfig).forEach(key => {
       if (!(key in config)) {
-        config[key] = key === 'smtp_enabled' ? 'true' : ''
+        config[key] = (defaultConfig as any)[key]
       }
     })
 
@@ -31,15 +40,26 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { brevo_api_key, brevo_sender_name, brevo_sender_email, smtp_enabled } = body
+    const { 
+      brevo_smtp_server, 
+      brevo_smtp_port, 
+      brevo_smtp_username, 
+      brevo_smtp_password, 
+      brevo_sender_name, 
+      brevo_sender_email, 
+      smtp_enabled 
+    } = body
 
-    if (!brevo_api_key || !brevo_sender_name || !brevo_sender_email) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!brevo_smtp_username || !brevo_smtp_password || !brevo_sender_name || !brevo_sender_email) {
+      return NextResponse.json({ error: 'Champs requis manquants (nom d\'utilisateur SMTP, mot de passe SMTP, nom expéditeur, email expéditeur)' }, { status: 400 })
     }
 
     // Update or insert configuration values
     const configUpdates = [
-      ['brevo_api_key', brevo_api_key],
+      ['brevo_smtp_server', brevo_smtp_server || 'smtp-relay.brevo.com'],
+      ['brevo_smtp_port', brevo_smtp_port || '587'],
+      ['brevo_smtp_username', brevo_smtp_username],
+      ['brevo_smtp_password', brevo_smtp_password],
       ['brevo_sender_name', brevo_sender_name],
       ['brevo_sender_email', brevo_sender_email],
       ['smtp_enabled', smtp_enabled || 'true']

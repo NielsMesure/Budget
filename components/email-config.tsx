@@ -14,7 +14,10 @@ import { toast } from "sonner"
 import { EmailTemplateEditor } from '@/components/email-template-editor'
 
 interface EmailConfigData {
-  brevo_api_key: string
+  brevo_smtp_server: string
+  brevo_smtp_port: string
+  brevo_smtp_username: string
+  brevo_smtp_password: string
   brevo_sender_name: string
   brevo_sender_email: string
   smtp_enabled: string
@@ -33,8 +36,11 @@ interface EmailTemplate {
 
 export function EmailConfig() {
   const [config, setConfig] = useState<EmailConfigData>({
-    brevo_api_key: '',
-    brevo_sender_name: '',
+    brevo_smtp_server: 'smtp-relay.brevo.com',
+    brevo_smtp_port: '587',
+    brevo_smtp_username: '',
+    brevo_smtp_password: '',
+    brevo_sender_name: 'Budget App',
     brevo_sender_email: '',
     smtp_enabled: 'true'
   })
@@ -205,26 +211,51 @@ export function EmailConfig() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="api-key" className="text-slate-300">Clé API Brevo</Label>
+                  <Label htmlFor="smtp-server" className="text-slate-300">Serveur SMTP</Label>
                   <Input
-                    id="api-key"
-                    type="password"
-                    placeholder="xkeysib-..."
-                    value={config.brevo_api_key}
-                    onChange={(e) => setConfig({...config, brevo_api_key: e.target.value})}
+                    id="smtp-server"
+                    placeholder="smtp-relay.brevo.com"
+                    value={config.brevo_smtp_server}
+                    onChange={(e) => setConfig({...config, brevo_smtp_server: e.target.value})}
                     className="bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sender-email" className="text-slate-300">Email expéditeur</Label>
+                  <Label htmlFor="smtp-port" className="text-slate-300">Port SMTP</Label>
                   <Input
-                    id="sender-email"
-                    type="email"
-                    placeholder="noreply@example.com"
-                    value={config.brevo_sender_email}
-                    onChange={(e) => setConfig({...config, brevo_sender_email: e.target.value})}
+                    id="smtp-port"
+                    type="number"
+                    placeholder="587"
+                    value={config.brevo_smtp_port}
+                    onChange={(e) => setConfig({...config, brevo_smtp_port: e.target.value})}
                     className="bg-slate-700 border-slate-600 text-white"
                   />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-username" className="text-slate-300">Nom d'utilisateur SMTP</Label>
+                  <Input
+                    id="smtp-username"
+                    type="email"
+                    placeholder="votre-email@exemple.com"
+                    value={config.brevo_smtp_username}
+                    onChange={(e) => setConfig({...config, brevo_smtp_username: e.target.value})}
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-400">Utilisez l'email de votre compte Brevo</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtp-password" className="text-slate-300">Mot de passe SMTP</Label>
+                  <Input
+                    id="smtp-password"
+                    type="password"
+                    placeholder="Votre clé SMTP Brevo"
+                    value={config.brevo_smtp_password}
+                    onChange={(e) => setConfig({...config, brevo_smtp_password: e.target.value})}
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-400">Trouvez ceci dans votre compte Brevo sous "SMTP & API"</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -239,16 +270,16 @@ export function EmailConfig() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Emails activés</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={config.smtp_enabled === 'true'}
-                      onCheckedChange={(checked) => setConfig({...config, smtp_enabled: checked ? 'true' : 'false'})}
-                    />
-                    <span className="text-slate-400">
-                      {config.smtp_enabled === 'true' ? 'Activé' : 'Désactivé'}
-                    </span>
-                  </div>
+                  <Label htmlFor="sender-email" className="text-slate-300">Email expéditeur</Label>
+                  <Input
+                    id="sender-email"
+                    type="email"
+                    placeholder="noreply@exemple.com"
+                    value={config.brevo_sender_email}
+                    onChange={(e) => setConfig({...config, brevo_sender_email: e.target.value})}
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                  <p className="text-xs text-slate-400">Doit être un email vérifié dans votre compte Brevo</p>
                 </div>
               </div>
               <div className="flex justify-end">

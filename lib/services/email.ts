@@ -1,7 +1,11 @@
 import { pool } from '@/lib/db'
+import * as nodemailer from 'nodemailer'
 
 interface EmailConfig {
-  brevo_api_key: string
+  brevo_smtp_server: string
+  brevo_smtp_port: string
+  brevo_smtp_username: string
+  brevo_smtp_password: string
   brevo_sender_name: string
   brevo_sender_email: string
   smtp_enabled: string
@@ -21,16 +25,27 @@ interface EmailData {
 export class EmailService {
   private static async getEmailConfig(): Promise<EmailConfig> {
     const [rows] = await pool.query(
-      'SELECT config_key, config_value FROM email_config WHERE config_key IN (?, ?, ?, ?)',
-      ['brevo_api_key', 'brevo_sender_name', 'brevo_sender_email', 'smtp_enabled']
+      'SELECT config_key, config_value FROM email_config WHERE config_key IN (?, ?, ?, ?, ?, ?, ?)',
+      ['brevo_smtp_server', 'brevo_smtp_port', 'brevo_smtp_username', 'brevo_smtp_password', 'brevo_sender_name', 'brevo_sender_email', 'smtp_enabled']
     ) as any
 
-    const config: Record<string, string> = {}
+    const config: EmailConfig = {
+      brevo_smtp_server: 'smtp-relay.brevo.com',
+      brevo_smtp_port: '587',
+      brevo_smtp_username: '',
+      brevo_smtp_password: '',
+      brevo_sender_name: '',
+      brevo_sender_email: '',
+      smtp_enabled: 'true'
+    }
+    
     rows.forEach((row: any) => {
-      config[row.config_key] = row.config_value || ''
+      if (row.config_key in config) {
+        (config as any)[row.config_key] = row.config_value || (config as any)[row.config_key]
+      }
     })
 
-    return config as EmailConfig
+    return config
   }
 
   private static async getEmailTemplate(templateKey: string): Promise<EmailTemplate | null> {
@@ -59,6 +74,18 @@ export class EmailService {
     return result
   }
 
+  private static async createTransporter(config: EmailConfig) {
+    return nodemailer.createTransport({
+      host: config.brevo_smtp_server,
+      port: parseInt(config.brevo_smtp_port) || 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: config.brevo_smtp_username,
+        pass: config.brevo_smtp_password,
+      },
+    })
+  }
+
   public static async sendEmail(
     templateKey: string,
     recipientEmail: string,
@@ -67,17 +94,17 @@ export class EmailService {
     try {
       const config = await this.getEmailConfig()
 
-      if (!config.brevo_api_key) {
-        return { success: false, error: 'Brevo API key not configured' }
+      if (!config.brevo_smtp_username || !config.brevo_smtp_password) {
+        return { success: false, error: 'Configuration SMTP Brevo incomplète (nom d\'utilisateur ou mot de passe manquant)' }
       }
 
       if (config.smtp_enabled !== 'true') {
-        return { success: false, error: 'Email sending is disabled' }
+        return { success: false, error: 'Envoi d\'emails désactivé' }
       }
 
       const template = await this.getEmailTemplate(templateKey)
       if (!template) {
-        return { success: false, error: `Email template '${templateKey}' not found` }
+        return { success: false, error: `Modèle email '${templateKey}' non trouvé` }
       }
 
       // Replace variables in template
@@ -85,36 +112,24 @@ export class EmailService {
       const htmlContent = this.replaceVariables(template.html_content, data)
       const textContent = this.replaceVariables(template.text_content, data)
 
-      // Send email via Brevo
-      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'api-key': config.brevo_api_key
-        },
-        body: JSON.stringify({
-          sender: {
-            name: config.brevo_sender_name,
-            email: config.brevo_sender_email
-          },
-          to: [{ email: recipientEmail }],
-          subject: subject,
-          htmlContent: htmlContent,
-          textContent: textContent
-        })
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Brevo API error:', errorText)
-        return { success: false, error: `Failed to send email: ${errorText}` }
+      // Create transporter and send email
+      const transporter = await this.createTransporter(config)
+      
+      const mailOptions = {
+        from: `"${config.brevo_sender_name}" <${config.brevo_sender_email}>`,
+        to: recipientEmail,
+        subject: subject,
+        text: textContent,
+        html: htmlContent,
       }
+
+      const result = await transporter.sendMail(mailOptions)
+      console.log('Email sent successfully:', result.messageId)
 
       return { success: true }
     } catch (error) {
       console.error('Email service error:', error)
-      return { success: false, error: 'Internal error occurred while sending email' }
+      return { success: false, error: `Erreur lors de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}` }
     }
   }
 

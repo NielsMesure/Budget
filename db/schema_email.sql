@@ -36,7 +36,10 @@ CREATE TABLE IF NOT EXISTS password_resets (
 
 -- Insert default Brevo configuration keys
 INSERT INTO email_config (config_key, config_value, description) VALUES
-('brevo_api_key', '', 'Clé API Brevo pour l\'envoi d\'emails'),
+('brevo_smtp_server', 'smtp-relay.brevo.com', 'Serveur SMTP Brevo'),
+('brevo_smtp_port', '587', 'Port SMTP Brevo'),
+('brevo_smtp_username', '', 'Nom d\'utilisateur SMTP Brevo (votre email de connexion)'),
+('brevo_smtp_password', '', 'Mot de passe SMTP Brevo (clé SMTP)'),
 ('brevo_sender_name', 'Budget App', 'Nom de l\'expéditeur par défaut'),
 ('brevo_sender_email', '', 'Email de l\'expéditeur par défaut'),
 ('smtp_enabled', 'true', 'Activer l\'envoi d\'emails via SMTP')

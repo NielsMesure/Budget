@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Ce système ajoute une configuration email complète avec intégration Brevo pour votre application Budget. Les administrateurs peuvent configurer les paramètres Brevo, gérer les modèles d'emails et envoyer des emails automatiques pour la création de compte et la réinitialisation de mot de passe.
+Ce système ajoute une configuration email complète avec intégration Brevo SMTP pour votre application Budget. Les administrateurs peuvent configurer les paramètres SMTP Brevo, gérer les modèles d'emails et envoyer des emails automatiques pour la création de compte et la réinitialisation de mot de passe.
 
 ## Configuration de la Base de Données
 
@@ -15,7 +15,7 @@ mysql -u your_username -p your_database < db/schema_email.sql
 ```
 
 Ce script crée les tables suivantes :
-- `email_config` : Stocke la configuration Brevo (clé API, expéditeur, etc.)
+- `email_config` : Stocke la configuration SMTP Brevo (serveur, port, identifiants, etc.)
 - `email_templates` : Stocke les modèles d'emails avec variables
 - `password_resets` : Gère les codes de réinitialisation de mot de passe
 
@@ -47,13 +47,16 @@ Si c'est la première utilisation de l'application :
 
 ## Fonctionnalités du Système Email
 
-### 1. Configuration Brevo
+### 1. Configuration Brevo SMTP
 
 ![Admin Setup](https://github.com/user-attachments/assets/3b84a7cd-a9ba-4d04-b997-0c4b5b1d2576)
 
 Dans l'onglet **Configuration** :
-- **Clé API Brevo** : Votre clé API Brevo (format: xkeysib-...)
-- **Email expéditeur** : L'email qui apparaîtra comme expéditeur
+- **Serveur SMTP** : Serveur SMTP Brevo (par défaut: smtp-relay.brevo.com)
+- **Port SMTP** : Port SMTP (par défaut: 587)
+- **Nom d'utilisateur SMTP** : Votre email de compte Brevo
+- **Mot de passe SMTP** : Votre clé SMTP Brevo (trouvée dans "SMTP & API")
+- **Email expéditeur** : L'email qui apparaîtra comme expéditeur (doit être vérifié dans Brevo)
 - **Nom expéditeur** : Le nom qui apparaîtra comme expéditeur
 - **Emails activés** : Basculer pour activer/désactiver l'envoi d'emails
 
@@ -119,21 +122,26 @@ const resetResponse = await fetch('/api/password-reset', {
 })
 ```
 
-## Configuration Brevo
+## Configuration Brevo SMTP
 
-### 1. Obtenir une Clé API
+### 1. Obtenir les Identifiants SMTP
 
 1. Créez un compte sur [Brevo](https://www.brevo.com)
 2. Allez dans votre tableau de bord
-3. Accédez à "API et Webhooks" → "Clés API"
-4. Créez une nouvelle clé API avec les permissions d'envoi d'emails
-5. Copiez la clé (format: xkeysib-...)
+3. Accédez à "SMTP & API"
+4. Notez vos identifiants SMTP :
+   - **Serveur SMTP** : smtp-relay.brevo.com
+   - **Port** : 587
+   - **Nom d'utilisateur** : Votre email de connexion Brevo
+   - **Mot de passe** : Votre clé SMTP (différente de votre mot de passe de connexion)
 
 ### 2. Configurer l'Expéditeur
 
 1. Vérifiez votre domaine dans Brevo
 2. Configurez l'email expéditeur (doit être un email vérifié)
 3. Définissez le nom d'expéditeur souhaité
+
+⚠️ **Important** : Utilisez les identifiants SMTP, pas une clé API. La clé SMTP se trouve dans la section "SMTP & API" de votre compte Brevo.
 
 ## Variables Disponibles dans les Modèles
 
@@ -183,20 +191,29 @@ await EmailService.sendEmail('template_key', 'user@example.com', { variable1: 'v
 
 ### Erreurs courantes :
 
-1. **"Brevo API key not configured"**
-   - Vérifiez que la clé API est correctement saisie dans la configuration
+1. **"Configuration SMTP Brevo incomplète"**
+   - Vérifiez que le nom d'utilisateur et mot de passe SMTP sont correctement saisis
+   - Assurez-vous d'utiliser votre clé SMTP (pas votre mot de passe de connexion)
 
-2. **"Email sending is disabled"**
+2. **"Envoi d'emails désactivé"**
    - Activez l'envoi d'emails dans l'onglet Configuration
 
-3. **"Failed to send email via Brevo"**
-   - Vérifiez la validité de votre clé API
+3. **"Erreur lors de l'envoi"**
+   - Vérifiez la validité de vos identifiants SMTP
    - Assurez-vous que l'email expéditeur est vérifié dans Brevo
    - Consultez les logs pour plus de détails
 
 4. **Erreurs de base de données**
    - Vérifiez que le schema email a été exécuté
    - Contrôlez la configuration de la base de données
+
+### Comment trouver vos identifiants SMTP Brevo :
+
+1. Connectez-vous à votre compte Brevo
+2. Allez dans "SMTP & API" 
+3. Dans la section "SMTP", vous trouverez :
+   - **Nom d'utilisateur** : Votre email de connexion
+   - **Mot de passe** : Cliquez sur "Générer un nouveau mot de passe SMTP" si nécessaire
 
 ## Structure des Fichiers Ajoutés
 
